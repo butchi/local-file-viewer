@@ -1,87 +1,58 @@
-<template>
-  <v-layout
-    column
-    justify-center
-    align-center
-  >
-    <v-flex
-      xs12
-      sm8
-      md6
-    >
-      <div class="text-center">
-        <logo />
-        <vuetify-logo />
-      </div>
-      <v-card>
-        <v-card-title class="headline">
-          Welcome to the Vuetify + Nuxt.js template
-        </v-card-title>
-        <v-card-text>
-          <p>Vuetify is a progressive Material Design component framework for Vue.js. It was designed to empower developers to create amazing applications.</p>
-          <p>
-            For more information on Vuetify, check out the <a
-              href="https://vuetifyjs.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              documentation
-            </a>.
-          </p>
-          <p>
-            If you have questions, please join the official <a
-              href="https://chat.vuetifyjs.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="chat"
-            >
-              discord
-            </a>.
-          </p>
-          <p>
-            Find a bug? Report it on the github <a
-              href="https://github.com/vuetifyjs/vuetify/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="contribute"
-            >
-              issue board
-            </a>.
-          </p>
-          <p>Thank you for developing with Vuetify and I look forward to bringing more exciting features in the future.</p>
-          <div class="text-xs-right">
-            <em><small>&mdash; John Leider</small></em>
-          </div>
-          <hr class="my-3">
-          <a
-            href="https://nuxtjs.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Nuxt Documentation
-          </a>
-          <br>
-          <a
-            href="https://github.com/nuxt/nuxt.js"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Nuxt GitHub
-          </a>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            color="primary"
-            nuxt
-            to="/inspire"
-          >
-            Continue
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-flex>
-  </v-layout>
+<template lang="pug">
+v-layout
+  v-flex(xs4)
+    v-treeview(
+      :active.sync="active"
+      :items="itemArr"
+      :load-children="fetchDirectory"
+      :open.sync="open"
+      activatable
+    )
+      template(v-slot:prepend="{ item }")
+        v-icon(
+          v-if="item.children"
+          v-text="`mdi-${item.name === '~/' ? 'home-variant' : 'folder'}`"
+        )
+
+  v-flex(xs8)
+    v-card(v-if="fObj.type === 'image'")
+      v-card-title
+        | {{ active[0] }}
+      v-card-text
+        v-img(:src="blobToMedia(fObj.content)")
+    v-card(v-if="fObj.type === 'video'")
+      v-card-title
+        | {{ active[0] }}
+      v-card-text
+        video(
+          :src="blobToMedia(fObj.content)"
+          width="100%"
+          controls
+        )
+    v-card(v-if="fObj.type === 'audio'")
+      v-card-title
+        | {{ active[0] }}
+      v-card-text
+        audio(
+          :src="blobToMedia(fObj.content)"
+          controls
+        )
+    v-card(v-if="fObj.type === 'file'")
+      v-card-title
+        | {{ active[0] }}
+      v-card-text
+        | {{ fObj.contentType }}
+    v-card(v-else)
+      v-card-text
+        v-row
+          v-col(
+            v-for="(val, i) in fObj.content"
+            :key="i"
+            cols="6"
+          )
+            v-card
+              v-card-title
+                | {{ val }}
 </template>
 
 <script>
@@ -89,9 +60,91 @@ import Logo from '~/components/Logo.vue'
 import VuetifyLogo from '~/components/VuetifyLogo.vue'
 
 export default {
+  data() {
+    return {
+      drawer: true,
+      itemArr: [{
+        id: '/Users/iwabuchi-yuki-butchi/',
+        name: '~/',
+        children: []
+      }],
+      open: [],
+      active: [],
+      fObj: {},
+    }
+  },
   components: {
     Logo,
     VuetifyLogo
+  },
+  computed: {
+  },
+  watch: {
+    async active() {
+      const path = this.active[0];
+
+      if (path[path.length - 1] === '/') {
+        const content = await this.ls(path);
+
+        this.fObj = {
+          type: 'directory',
+          content,
+        };
+      } else {
+        this.fObj = await this.cat(path);
+      }
+    },
+  },
+  methods: {
+    async ls(path) {
+      const res = await fetch(`//localhost:8000/api/ls?path=${path}`);
+
+      const json = await res.json();
+
+      return json.filter(item => item[0] !== '.');
+    },
+    async cat(path) {
+      const res = await fetch(`//localhost:8000/api/cat?path=${path}`);
+
+      const contentType = res.headers.get('Content-Type');
+
+      let type = 'file';
+
+      if (contentType.match(/^image\//g)) {
+        type = 'image';
+      }
+
+      if (contentType.match(/^video\//g)) {
+        type = 'video';
+      }
+
+      if (contentType.match(/^audio\//g)) {
+        type = 'audio';
+      }
+
+      const blob = await res.blob();
+
+      return {
+        type,
+        contentType,
+        content: blob,
+      };
+    },
+    async fetchDirectory(item) {
+      const path = item.id;
+
+      const json =  await this.ls(path);
+
+      item.children = this.itemArr.children = json.map((val, i) => Object.assign({}, {
+        id: path + val,
+        name: val,
+      }, val[val.length - 1] === '/' ? { children: [] } : {}));
+
+      return json;
+    },
+    blobToMedia(blob) {
+      return URL.createObjectURL(blob);
+    }
   }
 }
 </script>
