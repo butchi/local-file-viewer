@@ -2,6 +2,9 @@
   "name": "local-file-viewer",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "14.13.1"
+  },
   "scripts": {
     "serve": "nuxt-ts serve",
     "build": "nuxt-ts build",
