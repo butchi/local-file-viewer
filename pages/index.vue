@@ -48,13 +48,16 @@ v-layout
 import Logo from "~/components/Logo.vue";
 import VuetifyLogo from "~/components/VuetifyLogo.vue";
 
+const rootPath = "C://Users/iwabuchi-yuki-butchi/";
+// const rootPath = "/Users/iwabuchi-yuki-butchi/";
+
 export default {
   data() {
     return {
       drawer: true,
       itemArr: [
         {
-          id: "/Users/iwabuchi-yuki-butchi/",
+          id: rootPath,
           name: "~/",
           children: [],
         },
