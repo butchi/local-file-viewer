@@ -14,7 +14,7 @@ v-layout
           v-text="`mdi-${item.name === '~/' ? 'home-variant' : 'folder'}`"
         )
 
-  v-flex(xs8)
+  v-flex(v-if="fObj.content", xs8)
     v-card(v-if="fObj.type === 'image'")
       v-card-title
         | {{ active[0] }}
