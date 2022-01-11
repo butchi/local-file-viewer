@@ -32,12 +32,12 @@ const listFiles = dirPath => {
 };
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-    const { path } = req.query || '.';
+router.get('/', function (req, res, next) {
+  const { path } = req.query || '.';
 
-    const fileArr = listFiles(path);
+  const fileArr = listFiles(path);
 
-    res.json(fileArr);
+  res.json(fileArr);
 });
 
 module.exports = router;

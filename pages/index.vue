@@ -2,15 +2,15 @@
 v-layout
   v-flex(xs4)
     v-treeview(
-      :active.sync="active"
-      :items="itemArr"
-      :load-children="fetchDirectory"
-      :open.sync="open"
+      :active.sync="active",
+      :items="itemArr",
+      :load-children="fetchDirectory",
+      :open.sync="open",
       activatable
     )
       template(v-slot:prepend="{ item }")
         v-icon(
-          v-if="item.children"
+          v-if="item.children",
           v-text="`mdi-${item.name === '~/' ? 'home-variant' : 'folder'}`"
         )
 
@@ -24,19 +24,12 @@ v-layout
       v-card-title
         | {{ active[0] }}
       v-card-text
-        video(
-          :src="blobToMedia(fObj.content)"
-          width="100%"
-          controls
-        )
+        video(:src="blobToMedia(fObj.content)", width="100%", controls)
     v-card(v-if="fObj.type === 'audio'")
       v-card-title
         | {{ active[0] }}
       v-card-text
-        audio(
-          :src="blobToMedia(fObj.content)"
-          controls
-        )
+        audio(:src="blobToMedia(fObj.content)", controls)
     v-card(v-if="fObj.type === 'file'")
       v-card-title
         | {{ active[0] }}
@@ -45,49 +38,46 @@ v-layout
     v-card(v-else)
       v-card-text
         v-row
-          v-col(
-            v-for="(val, i) in fObj.content"
-            :key="i"
-            cols="6"
-          )
+          v-col(v-for="(val, i) in fObj.content", :key="i", cols="6")
             v-card
               v-card-title
                 | {{ val }}
 </template>
 
 <script>
-import Logo from '~/components/Logo.vue'
-import VuetifyLogo from '~/components/VuetifyLogo.vue'
+import Logo from "~/components/Logo.vue";
+import VuetifyLogo from "~/components/VuetifyLogo.vue";
 
 export default {
   data() {
     return {
       drawer: true,
-      itemArr: [{
-        id: '/Users/iwabuchi-yuki-butchi/',
-        name: '~/',
-        children: []
-      }],
+      itemArr: [
+        {
+          id: "/Users/iwabuchi-yuki-butchi/",
+          name: "~/",
+          children: [],
+        },
+      ],
       open: [],
       active: [],
       fObj: {},
-    }
+    };
   },
   components: {
     Logo,
-    VuetifyLogo
+    VuetifyLogo,
   },
-  computed: {
-  },
+  computed: {},
   watch: {
     async active() {
       const path = this.active[0];
 
-      if (path[path.length - 1] === '/') {
+      if (path[path.length - 1] === "/") {
         const content = await this.ls(path);
 
         this.fObj = {
-          type: 'directory',
+          type: "directory",
           content,
         };
       } else {
@@ -101,25 +91,25 @@ export default {
 
       const json = await res.json();
 
-      return json.filter(item => item[0] !== '.');
+      return json.filter((item) => item[0] !== ".");
     },
     async cat(path) {
       const res = await fetch(`//localhost:8000/api/cat?path=${path}`);
 
-      const contentType = res.headers.get('Content-Type');
+      const contentType = res.headers.get("Content-Type");
 
-      let type = 'file';
+      let type = "file";
 
       if (contentType.match(/^image\//g)) {
-        type = 'image';
+        type = "image";
       }
 
       if (contentType.match(/^video\//g)) {
-        type = 'video';
+        type = "video";
       }
 
       if (contentType.match(/^audio\//g)) {
-        type = 'audio';
+        type = "audio";
       }
 
       const blob = await res.blob();
@@ -133,18 +123,24 @@ export default {
     async fetchDirectory(item) {
       const path = item.id;
 
-      const json =  await this.ls(path);
+      const json = await this.ls(path);
 
-      item.children = this.itemArr.children = json.map((val, i) => Object.assign({}, {
-        id: path + val,
-        name: val,
-      }, val[val.length - 1] === '/' ? { children: [] } : {}));
+      item.children = this.itemArr.children = json.map((val, i) =>
+        Object.assign(
+          {},
+          {
+            id: path + val,
+            name: val,
+          },
+          val[val.length - 1] === "/" ? { children: [] } : {}
+        )
+      );
 
       return json;
     },
     blobToMedia(blob) {
       return URL.createObjectURL(blob);
-    }
-  }
-}
+    },
+  },
+};
 </script>
