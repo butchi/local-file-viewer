@@ -90,14 +90,18 @@ export default {
   },
   methods: {
     async ls(path) {
-      const res = await fetch(`//localhost:8000/api/ls?path=${path}`);
+      const res = await fetch(
+        `//localhost:8000/api/ls?path=${encodeURIComponent(path)}`
+      );
 
       const json = await res.json();
 
       return json.filter((item) => item[0] !== ".");
     },
     async cat(path) {
-      const res = await fetch(`//localhost:8000/api/cat?path=${path}`);
+      const res = await fetch(
+        `//localhost:8000/api/cat?path=${encodeURIComponent(path)}`
+      );
 
       const contentType = res.headers.get("Content-Type");
 
@@ -128,16 +132,18 @@ export default {
 
       const json = await this.ls(path);
 
-      item.children = this.itemArr.children = json.map((val, i) =>
-        Object.assign(
+      item.children = this.itemArr.children = json.map((val, _i) => {
+        const v = decodeURIComponent(val);
+
+        return Object.assign(
           {},
           {
-            id: path + val,
-            name: val,
+            id: path + v,
+            name: v,
           },
-          val[val.length - 1] === "/" ? { children: [] } : {}
-        )
-      );
+          v[v.length - 1] === "/" ? { children: [] } : {}
+        );
+      });
 
       return json;
     },
