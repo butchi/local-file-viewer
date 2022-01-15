@@ -159,6 +159,23 @@ export default {
 
       let type = "file";
 
+      if (contentType.match(/^application\//g)) {
+        type = "application";
+
+        const text = await res.text();
+
+        return {
+          path,
+          type,
+          contentType,
+          content: text,
+        };
+      }
+
+      if (contentType.match(/^image\//g)) {
+        type = "image";
+      }
+
       if (contentType.match(/^image\//g)) {
         type = "image";
       }
