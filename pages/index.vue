@@ -195,6 +195,7 @@ export default {
       const blob = await res.blob();
 
       return {
+        path,
         type,
         contentType,
         content: blob,
