@@ -11,10 +11,10 @@ v-layout
     app
   )
     v-treeview(
-      :active.sync="active",
       :items="itemArr",
       :load-children="fetchDirectory",
       :open.sync="open",
+      @update:active="activeHandler",
       activatable
     )
       template(v-slot:prepend="{ item }")
@@ -23,11 +23,9 @@ v-layout
             | mdi-home-variant
           v-icon(v-else)
             | mdi-folder
-          a(@click.stop="openFile")
         v-flex(v-else)
           v-icon
             | mdi-file
-          a(@click.stop="openDirectory")
 
   v-app-bar(:clipped-left="clipped", fixed, app)
     v-app-bar-nav-icon(@click.stop="drawer = !drawer")
@@ -113,7 +111,6 @@ export default {
         },
       ],
       open: [],
-      active: [],
       fObj: {},
     };
   },
@@ -122,23 +119,28 @@ export default {
     VuetifyLogo,
   },
   computed: {},
-  watch: {
-    async active() {
-      const path = this.active[0];
+  methods: {
+    activeHandler(pathArr) {
+      const path = pathArr[0];
 
-      if (path[path.length - 1] === "/") {
-        const content = await this.ls(path);
-
-        this.fObj = {
-          type: "directory",
-          content,
-        };
+      if (path == null) {
+      } else if (path[path.length - 1] === "/") {
+        this.openDirectory(path);
       } else {
-        this.fObj = await this.cat(path);
+        this.openFile(path);
       }
     },
-  },
-  methods: {
+    async openDirectory(path) {
+      const content = await this.ls(path);
+
+      this.fObj = {
+        type: "directory",
+        content,
+      };
+    },
+    async openFile(path) {
+      this.fObj = await this.cat(path);
+    },
     async ls(path) {
       const res = await fetch(
         `//localhost:8000/api/ls?path=${encodeURIComponent(path)}`
