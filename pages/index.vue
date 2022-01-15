@@ -3,7 +3,10 @@ v-layout
   v-navigation-drawer(
     v-model="drawer",
     :mini-variant="miniVariant",
+    :mini-variant-width="150",
     :clipped="clipped",
+    width="690",
+    expand-on-hover,
     fixed,
     app
   )
