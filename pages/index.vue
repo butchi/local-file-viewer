@@ -45,7 +45,11 @@ v-layout
         | mdi-menu
 
   v-flex(v-if="fObj.content")
-    v-card(v-if="fObj.type === 'image'")
+    v-card(v-if="fObj.type === 'application'")
+      v-card-title
+        | {{ fObj.path }}
+      v-card-text(v-html="stringBreak(fObj.content)")
+    v-card(v-else-if="fObj.type === 'image'")
       v-card-title
         | {{ fObj.path }}
       v-card-text
@@ -218,6 +222,9 @@ export default {
     },
     blobToMedia(blob) {
       return URL.createObjectURL(blob);
+    },
+    stringBreak(str) {
+      return str.replaceAll("\n", "<br />");
     },
   },
 };
