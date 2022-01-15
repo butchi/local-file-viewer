@@ -16,7 +16,6 @@ router.get('/', function (req, res, next) {
 
       FileType.fromBuffer(buf).then(typeObj => {
         if (typeObj == null) {
-          res.header('Content-Type', 'application/octet-stream')
         } else if (typeObj.mime) {
           res.header('Content-Type', typeObj.mime)
         }
