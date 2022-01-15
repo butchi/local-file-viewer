@@ -72,7 +72,7 @@ v-layout
     v-card(v-else)
       v-card-text
         v-row
-          v-col(v-for="(val, i) in fObj.content", :key="i", cols="6")
+          v-col(v-for="(val, i) in fObj.content", :key="i", cols="2")
             v-card
               v-card-title
                 | {{ decodeURIComponent(val) }}
