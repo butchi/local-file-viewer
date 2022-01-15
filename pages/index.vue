@@ -47,22 +47,22 @@ v-layout
   v-flex(v-if="fObj.content")
     v-card(v-if="fObj.type === 'image'")
       v-card-title
-        | {{ active[0] }}
+        | {{ fObj.path }}
       v-card-text
         v-img(:src="blobToMedia(fObj.content)")
     v-card(v-if="fObj.type === 'video'")
       v-card-title
-        | {{ active[0] }}
+        | {{ fObj.path }}
       v-card-text
         video(:src="blobToMedia(fObj.content)", width="100%", controls)
     v-card(v-if="fObj.type === 'audio'")
       v-card-title
-        | {{ active[0] }}
+        | {{ fObj.path }}
       v-card-text
         audio(:src="blobToMedia(fObj.content)", controls)
     v-card(v-if="fObj.type === 'file'")
       v-card-title
-        | {{ active[0] }}
+        | {{ fObj.name }}
       v-card-text
         | {{ fObj.contentType }}
     v-card(v-else)
