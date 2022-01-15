@@ -6,20 +6,26 @@ const FileType = require('file-type');
 const { type } = require('os');
 
 router.get('/', function (req, res, next) {
-  const { path } = req.query;
+  try {
+    const { path } = req.query;
 
-  fs.readFile(path, (err, buf) => {
-    if (err) {
-      throw err;
-    }
-
-    FileType.fromBuffer(buf).then(typeObj => {
-      if (typeObj.mime) {
-        res.header('Content-Type', typeObj.mime)
+    fs.readFile(path, (err, buf) => {
+      if (err) {
+        console.log(err);
       }
-      res.send(buf);
-    });
-  })
+
+      FileType.fromBuffer(buf).then(typeObj => {
+        if (typeObj == null) {
+          res.header('Content-Type', 'application/octet-stream')
+        } else if (typeObj.mime) {
+          res.header('Content-Type', typeObj.mime)
+        }
+        res.send(buf);
+      });
+    })
+  } catch (err) {
+    console.log(`Error: ${err}`)
+  }
 });
 
 module.exports = router;
