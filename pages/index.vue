@@ -71,7 +71,7 @@ v-layout
           v-col(v-for="(val, i) in fObj.content", :key="i", cols="6")
             v-card
               v-card-title
-                | {{ val }}
+                | {{ decodeURIComponent(val) }}
 
   v-navigation-drawer(v-model="rightDrawer", :right="right", temporary, fixed)
     v-list
