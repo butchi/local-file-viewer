@@ -15,10 +15,16 @@ v-layout
       activatable
     )
       template(v-slot:prepend="{ item }")
-        v-icon(
-          v-if="item.children",
-          v-text="`mdi-${item.name === '~/' ? 'home-variant' : 'folder'}`"
-        )
+        v-flex(v-if="item.children")
+          v-icon(v-if="item.name === '~/'")
+            | mdi-home-variant
+          v-icon(v-else)
+            | mdi-folder
+          a(@click.stop="openFile")
+        v-flex(v-else)
+          v-icon
+            | mdi-file
+          a(@click.stop="openDirectory")
 
   v-app-bar(:clipped-left="clipped", fixed, app)
     v-app-bar-nav-icon(@click.stop="drawer = !drawer")
