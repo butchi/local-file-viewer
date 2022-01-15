@@ -7,19 +7,19 @@ v-layout
     fixed,
     app
   )
-    v-list
-      v-list-item(
-        v-for="(item, i) in items",
-        :key="i",
-        :to="item.to",
-        router,
-        exact
-      )
-        v-list-item-action
-          v-icon
-            | {{ item.icon }}
-        v-list-item-content
-          v-list-item-title(v-text="item.title")
+    v-treeview(
+      :active.sync="active",
+      :items="itemArr",
+      :load-children="fetchDirectory",
+      :open.sync="open",
+      activatable
+    )
+      template(v-slot:prepend="{ item }")
+        v-icon(
+          v-if="item.children",
+          v-text="`mdi-${item.name === '~/' ? 'home-variant' : 'folder'}`"
+        )
+
   v-app-bar(:clipped-left="clipped", fixed, app)
     v-app-bar-nav-icon(@click.stop="drawer = !drawer")
     v-btn(icon, @click.stop="miniVariant = !miniVariant")
@@ -37,21 +37,7 @@ v-layout
       v-icon
         | mdi-menu
 
-  v-flex(xs4)
-    v-treeview(
-      :active.sync="active",
-      :items="itemArr",
-      :load-children="fetchDirectory",
-      :open.sync="open",
-      activatable
-    )
-      template(v-slot:prepend="{ item }")
-        v-icon(
-          v-if="item.children",
-          v-text="`mdi-${item.name === '~/' ? 'home-variant' : 'folder'}`"
-        )
-
-  v-flex(v-if="fObj.content", xs8)
+  v-flex(v-if="fObj.content")
     v-card(v-if="fObj.type === 'image'")
       v-card-title
         | {{ active[0] }}
@@ -104,20 +90,8 @@ export default {
   data() {
     return {
       clipped: false,
-      drawer: false,
+      drawer: true,
       fixed: false,
-      items: [
-        {
-          icon: "mdi-apps",
-          title: "Welcome",
-          to: "/",
-        },
-        {
-          icon: "mdi-chart-bubble",
-          title: "Inspire",
-          to: "/inspire",
-        },
-      ],
       miniVariant: false,
       right: true,
       rightDrawer: false,
