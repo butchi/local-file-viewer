@@ -49,18 +49,18 @@ v-layout
       v-card-title
         | {{ fObj.path }}
       v-card-text
-        v-img(:src="blobToMedia(fObj.content)")
-    v-card(v-if="fObj.type === 'video'")
+        v-img(:src="blobToMedia(fObj.content)", max-height="960", contain)
+    v-card(v-else-if="fObj.type === 'video'")
       v-card-title
         | {{ fObj.path }}
       v-card-text
         video(:src="blobToMedia(fObj.content)", width="100%", controls)
-    v-card(v-if="fObj.type === 'audio'")
+    v-card(v-else-if="fObj.type === 'audio'")
       v-card-title
         | {{ fObj.path }}
       v-card-text
         audio(:src="blobToMedia(fObj.content)", controls)
-    v-card(v-if="fObj.type === 'file'")
+    v-card(v-else-if="fObj.type === 'file'")
       v-card-title
         | {{ fObj.name }}
       v-card-text
