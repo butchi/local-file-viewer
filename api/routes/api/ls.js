@@ -7,21 +7,25 @@ const listFiles = dirPath => {
   const fileArr = [];
   const pathArr = fs.readdirSync(decodeURIComponent(dirPath));
 
-  for (let name of pathArr) {
+  pathArr.forEach(name => {
     try {
       const path = `${dirPath}/${name}`;
       const stat = fs.statSync(path);
 
       if (stat == null) {
       } else if (stat.isFile()) {
-        fileArr.push(encodeURIComponent(name));
+        fileArr.push({
+          name: encodeURIComponent(name),
+        });
       } else if (stat.isDirectory()) {
-        fileArr.push(encodeURIComponent(name + '/'));
+        fileArr.push({
+          name: encodeURIComponent(name + '/'),
+        });
       }
     } catch (err) {
       console.error('error:', err.message);
     }
-  }
+  });
 
   return fileArr;
 };
