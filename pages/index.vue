@@ -44,7 +44,7 @@ v-layout
       v-icon
         | mdi-menu
 
-  v-flex(v-if="fObj.content")
+  v-dialog(v-model="dialog", width="960")
     v-card(v-if="fObj.type === 'application'")
       v-card-title
         | {{ fObj.path }}
@@ -69,54 +69,56 @@ v-layout
         | {{ fObj.name }}
       v-card-text
         | {{ fObj.contentType }}
-    v-card(v-else-if="fObj.type === 'directory'")
-      v-btn.ma-1(
-        color="primary",
-        :text="dirMode == 'grid'",
-        @click.stop="dirMode = 'grid'"
-      )
-        | グリッド
-      v-btn.ma-1(
-        color="primary",
-        :text="dirMode == 'detail'",
-        @click.stop="dirMode = 'detail'"
-      )
-        | 詳細
 
-      v-card-text(v-if="dirMode == 'grid'")
-        v-row
-          v-col(v-for="(item, i) in fObj.content", :key="i", cols="2")
-            v-card(min-height="160")
-              v-card-title.text-caption
-                | {{ decodeURIComponent(item.name) }}
+  v-card(v-if="curFileArr")
+    v-btn.ma-1(
+      color="primary",
+      :text="dirMode == 'grid'",
+      @click.stop="dirMode = 'grid'"
+    )
+      | グリッド
+    v-btn.ma-1(
+      color="primary",
+      :text="dirMode == 'detail'",
+      @click.stop="dirMode = 'detail'"
+    )
+      | 詳細
 
-      v-data-table(
-        v-else,
-        :headers="dirHeaderArr",
-        :options="{ itemsPerPage: 15 }",
-        :items="fObj.content"
-      )
-        template(v-slot:item.name="{ item }")
-          v-flex
-            | {{ decodeURIComponent(item.name) }}
-        template(v-slot:item.atimeMs="{ item }")
-          v-flex
-            | {{ msToDate(item.atimeMs) }}
-        template(v-slot:item.mtimeMs="{ item }")
-          v-flex
-            | {{ msToDate(item.mtimeMs) }}
-        template(v-slot:item.ctimeMs="{ item }")
-          v-flex
-            | {{ msToDate(item.ctimeMs) }}
-        template(v-slot:item.size="{ item }")
-          v-flex(v-if="item.size === 0")
-            | {{ '' }}
-          v-flex(v-else-if="item.size < 1024 * 1024")
-            | {{ Math.ceil(item.size / 1024) + 'KB' }}
-          v-flex(v-else-if="item.size < 1024 * 1024 * 1024")
-            | {{ Math.ceil(item.size / 1024 / 1024) + 'MB' }}
-          v-flex(v-else-if="item.size < 1024 * 1024 * 1024 * 1024")
-            | {{ Math.ceil(item.size / 1024 / 1024 / 1024) + 'GB' }}
+    v-card-text(v-if="dirMode == 'grid'")
+      v-row
+        v-col(v-for="(file, i) in curFileArr", :key="i", cols="2")
+          v-card(min-height="160", @click.stop="fileClickHandler(file)")
+            v-card-title.text-caption
+              | {{ decodeURIComponent(file.name) }}
+
+    v-data-table(
+      v-else,
+      :headers="dirHeaderArr",
+      :options="{ itemsPerPage: 15 }",
+      :items="curFileArr",
+      @click:row="fileClickHandler"
+    )
+      template(v-slot:item.name="{ item }")
+        v-flex
+          | {{ decodeURIComponent(item.name) }}
+      template(v-slot:item.atimeMs="{ item }")
+        v-flex.text-caption
+          | {{ msToDate(item.atimeMs) }}
+      template(v-slot:item.mtimeMs="{ item }")
+        v-flex.text-caption
+          | {{ msToDate(item.mtimeMs) }}
+      template(v-slot:item.ctimeMs="{ item }")
+        v-flex.text-caption
+          | {{ msToDate(item.ctimeMs) }}
+      template(v-slot:item.size="{ item }")
+        v-flex(v-if="item.size === 0")
+          | {{ '' }}
+        v-flex(v-else-if="item.size < 1024 * 1024")
+          | {{ Math.ceil(item.size / 1024) + 'KB' }}
+        v-flex(v-else-if="item.size < 1024 * 1024 * 1024")
+          | {{ Math.ceil(item.size / 1024 / 1024) + 'MB' }}
+        v-flex(v-else-if="item.size < 1024 * 1024 * 1024 * 1024")
+          | {{ Math.ceil(item.size / 1024 / 1024 / 1024) + 'GB' }}
 
   v-navigation-drawer(v-model="rightDrawer", :right="right", temporary, fixed)
     v-list
@@ -147,6 +149,7 @@ export default {
       miniVariant: false,
       right: true,
       rightDrawer: false,
+      dialog: false,
       title: "Local file viewer",
       itemArr: [
         {
@@ -157,6 +160,7 @@ export default {
       ],
       dirMode: "grid",
       open: [],
+      curFileArr: [],
       fObj: {},
       dirHeaderArr: [
         {
@@ -186,6 +190,9 @@ export default {
     Logo,
     VuetifyLogo,
   },
+  mounted() {
+    this.openDirectory(rootPath);
+  },
   computed: {},
   methods: {
     activeHandler(pathArr) {
@@ -198,16 +205,20 @@ export default {
         this.openFile(path);
       }
     },
+    fileClickHandler(file) {
+      if (file.isDirectory) {
+        this.openDirectory(file.path);
+      } else {
+        this.openFile(file.path);
+      }
+    },
     async openDirectory(path) {
-      const content = await this.ls(path);
-
-      this.fObj = {
-        type: "directory",
-        content,
-      };
+      this.curFileArr = await this.ls(path);
     },
     async openFile(path) {
       this.fObj = await this.cat(path);
+
+      this.dialog = true;
     },
     async ls(path) {
       const res = await fetch(
@@ -216,9 +227,9 @@ export default {
 
       const json = await res.json();
 
-      const fObjArr = json;
+      const fileArr = json;
 
-      return fObjArr.filter((item) => item.name[0] !== ".");
+      return fileArr.filter((item) => item.name[0] !== ".");
     },
     async cat(path) {
       const res = await fetch(
