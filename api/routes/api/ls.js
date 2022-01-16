@@ -14,13 +14,17 @@ const listFiles = dirPath => {
 
       if (stat == null) {
       } else if (stat.isFile()) {
-        fileArr.push({
+        fileArr.push(Object.assign({}, {
           name: encodeURIComponent(name),
-        });
+        },
+          stat
+        ));
       } else if (stat.isDirectory()) {
-        fileArr.push({
+        fileArr.push(Object.assign({}, {
           name: encodeURIComponent(name + '/'),
-        });
+        },
+          stat
+        ));
       }
     } catch (err) {
       console.error('error:', err.message);
