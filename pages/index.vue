@@ -218,8 +218,6 @@ export default {
 
       const fObjArr = json;
 
-      console.log(Object.entries(fObjArr[0]));
-
       return fObjArr.filter((item) => item.name[0] !== ".");
     },
     async cat(path) {
