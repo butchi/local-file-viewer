@@ -15,12 +15,16 @@ const listFiles = dirPath => {
       if (stat == null) {
       } else if (stat.isFile()) {
         fileArr.push(Object.assign({}, {
+          isDirectory: false,
+          path,
           name: encodeURIComponent(name),
         },
           stat
         ));
       } else if (stat.isDirectory()) {
         fileArr.push(Object.assign({}, {
+          isDirectory: true,
+          path: path,
           name: encodeURIComponent(name + '/'),
         },
           stat
