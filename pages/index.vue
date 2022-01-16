@@ -48,7 +48,7 @@ v-layout
     v-card(v-if="fObj.type === 'application'")
       v-card-title
         | {{ fObj.path }}
-      v-card-text(v-html="stringBreak(fObj.content)")
+      v-card-text(v-html="stringToHtml(fObj.content)")
     v-card(v-else-if="fObj.type === 'image'")
       v-card-title
         | {{ fObj.path }}
@@ -224,8 +224,9 @@ export default {
     blobToMedia(blob) {
       return URL.createObjectURL(blob);
     },
-    stringBreak(str) {
-      return str.replaceAll("\n", "<br />");
+    stringToHtml(str) {
+      return str.replaceAll(" ", "&nbsp;").replaceAll("\n", "<br />");
+    },
     },
   },
 };
