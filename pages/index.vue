@@ -69,13 +69,13 @@ v-layout
         | {{ fObj.name }}
       v-card-text
         | {{ fObj.contentType }}
-    v-card(v-else)
+    v-card(v-else-if="fObj.type === 'directory'")
       v-card-text
         v-row
-          v-col(v-for="(val, i) in fObj.content", :key="i", cols="2")
+          v-col(v-for="(item, i) in fObj.content", :key="i", cols="2")
             v-card
               v-card-title
-                | {{ decodeURIComponent(val) }}
+                | {{ decodeURIComponent(item.name) }}
 
   v-navigation-drawer(v-model="rightDrawer", :right="right", temporary, fixed)
     v-list
@@ -152,7 +152,7 @@ export default {
 
       const json = await res.json();
 
-      return json.filter((item) => item[0] !== ".");
+      return json.filter((item) => item.name[0] !== ".");
     },
     async cat(path) {
       const res = await fetch(
@@ -201,22 +201,24 @@ export default {
         content: blob,
       };
     },
-    async fetchDirectory(item) {
-      const path = item.id;
+    async fetchDirectory(obj) {
+      const path = obj.id;
 
       const json = await this.ls(path);
 
-      item.children = this.itemArr.children = json.map((val, _i) => {
-        const v = decodeURIComponent(val);
+      obj.children = this.itemArr.children = json.map((item) => {
+        const name = decodeURIComponent(item.name);
 
-        return Object.assign(
+        const ret = Object.assign(
           {},
           {
-            id: path + v,
-            name: v,
+            id: path + name,
+            name,
           },
-          v[v.length - 1] === "/" ? { children: [] } : {}
+          name[name.length - 1] === "/" ? { children: [] } : {}
         );
+
+        return ret;
       });
 
       return json;
@@ -226,7 +228,6 @@ export default {
     },
     stringToHtml(str) {
       return str.replaceAll(" ", "&nbsp;").replaceAll("\n", "<br />");
-    },
     },
   },
 };
