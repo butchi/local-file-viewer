@@ -70,12 +70,53 @@ v-layout
       v-card-text
         | {{ fObj.contentType }}
     v-card(v-else-if="fObj.type === 'directory'")
-      v-card-text
+      v-btn.ma-1(
+        color="primary",
+        :text="dirMode == 'grid'",
+        @click.stop="dirMode = 'grid'"
+      )
+        | グリッド
+      v-btn.ma-1(
+        color="primary",
+        :text="dirMode == 'detail'",
+        @click.stop="dirMode = 'detail'"
+      )
+        | 詳細
+
+      v-card-text(v-if="dirMode == 'grid'")
         v-row
           v-col(v-for="(item, i) in fObj.content", :key="i", cols="2")
-            v-card
-              v-card-title
+            v-card(min-height="160")
+              v-card-title.text-caption
                 | {{ decodeURIComponent(item.name) }}
+
+      v-data-table(
+        v-else,
+        :headers="dirHeaderArr",
+        :options="{ itemsPerPage: 15 }",
+        :items="fObj.content"
+      )
+        template(v-slot:item.name="{ item }")
+          v-flex
+            | {{ decodeURIComponent(item.name) }}
+        template(v-slot:item.atimeMs="{ item }")
+          v-flex
+            | {{ msToDate(item.atimeMs) }}
+        template(v-slot:item.mtimeMs="{ item }")
+          v-flex
+            | {{ msToDate(item.mtimeMs) }}
+        template(v-slot:item.ctimeMs="{ item }")
+          v-flex
+            | {{ msToDate(item.ctimeMs) }}
+        template(v-slot:item.size="{ item }")
+          v-flex(v-if="item.size === 0")
+            | {{ '' }}
+          v-flex(v-else-if="item.size < 1024 * 1024")
+            | {{ Math.ceil(item.size / 1024) + 'KB' }}
+          v-flex(v-else-if="item.size < 1024 * 1024 * 1024")
+            | {{ Math.ceil(item.size / 1024 / 1024) + 'MB' }}
+          v-flex(v-else-if="item.size < 1024 * 1024 * 1024 * 1024")
+            | {{ Math.ceil(item.size / 1024 / 1024 / 1024) + 'GB' }}
 
   v-navigation-drawer(v-model="rightDrawer", :right="right", temporary, fixed)
     v-list
@@ -114,8 +155,31 @@ export default {
           children: [],
         },
       ],
+      dirMode: "grid",
       open: [],
       fObj: {},
+      dirHeaderArr: [
+        {
+          text: "ファイル名",
+          value: "name",
+        },
+        {
+          text: "最終アクセス日時",
+          value: "atimeMs",
+        },
+        {
+          text: "最終変更日時",
+          value: "mtimeMs",
+        },
+        {
+          text: "作成日時",
+          value: "ctimeMs",
+        },
+        {
+          text: "サイズ",
+          value: "size",
+        },
+      ],
     };
   },
   components: {
@@ -152,7 +216,11 @@ export default {
 
       const json = await res.json();
 
-      return json.filter((item) => item.name[0] !== ".");
+      const fObjArr = json;
+
+      console.log(Object.entries(fObjArr[0]));
+
+      return fObjArr.filter((item) => item.name[0] !== ".");
     },
     async cat(path) {
       const res = await fetch(
@@ -228,6 +296,11 @@ export default {
     },
     stringToHtml(str) {
       return str.replaceAll(" ", "&nbsp;").replaceAll("\n", "<br />");
+    },
+    msToDate(ms) {
+      const date = new Date(ms);
+
+      return date.toLocaleString("ja-JP");
     },
   },
 };
