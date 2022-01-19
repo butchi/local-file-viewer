@@ -97,6 +97,7 @@ v-layout
             min-width="160",
             @click.stop="fileClickHandler(file)"
           )
+            v-img(v-if="file.content", :src="blobToMedia(file.content)")
             v-card-title.text-caption
               | {{ decodeURIComponent(file.name) }}
 
@@ -223,6 +224,20 @@ export default {
     },
     async openDirectory(dirPath) {
       this.curFileArr = await this.ls(dirPath);
+
+      this.curFileArr
+        .filter((file) => {
+          return file.size <= 999999 && !this.isDirectory(file.name);
+        })
+        .forEach((file, i) => {
+          const promise = this.cat(file.path);
+
+          promise.then((fileObj) => {
+            if (fileObj.type === "image") {
+              this.curFileArr[i].content = fileObj.content;
+            }
+          });
+        });
     },
     async openFile(path) {
       this.dialog = true;
