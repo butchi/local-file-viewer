@@ -107,9 +107,9 @@ v-layout
       template(v-slot:item.mtimeMs="{ item }")
         v-flex.text-caption
           | {{ msToDate(item.mtimeMs) }}
-      template(v-slot:item.ctimeMs="{ item }")
+      template(v-slot:item.birthtimeMs="{ item }")
         v-flex.text-caption
-          | {{ msToDate(item.ctimeMs) }}
+          | {{ msToDate(item.birthtimeMs) }}
       template(v-slot:item.size="{ item }")
         v-flex(v-if="item.size === 0")
           | {{ '' }}
@@ -177,7 +177,7 @@ export default {
         },
         {
           text: "作成日時",
-          value: "ctimeMs",
+          value: "birthtimeMs",
         },
         {
           text: "サイズ",
