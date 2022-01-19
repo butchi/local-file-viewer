@@ -158,7 +158,7 @@ export default {
       title: "Local file viewer",
       itemArr: [
         {
-          id: rootPath + "/",
+          id: rootPath,
           name: "~/",
           children: [],
         },
