@@ -320,7 +320,8 @@ export default {
       return json;
     },
     isDirectory(name) {
-      return name[name.length - 1] === "/" || name[name.length - 1] === "\\";
+      const n = decodeURIComponent(name);
+      return n[n.length - 1] === "/" || n[n.length - 1] === "\\";
     },
     blobToMedia(blob) {
       return URL.createObjectURL(blob);
