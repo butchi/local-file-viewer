@@ -2,40 +2,26 @@ const express = require('express');
 const router = express.Router();
 
 const fs = require('fs');
+const path = require('path');
 
 const listFiles = dirPath => {
-  const fileArr = [];
-  const pathArr = fs.readdirSync(decodeURIComponent(dirPath));
+  const nameArr = fs.readdirSync(decodeURIComponent(dirPath));
 
-  pathArr.forEach(name => {
+  return nameArr.map(name => {
     try {
-      const path = `${dirPath}/${name}`;
-      const stat = fs.statSync(path);
+      const filePath = path.join(dirPath, name);
+      const stat = fs.statSync(filePath);
 
-      if (stat == null) {
-      } else if (stat.isFile()) {
-        fileArr.push(Object.assign({}, {
-          isDirectory: false,
-          path,
-          name: encodeURIComponent(name),
-        },
-          stat
-        ));
-      } else if (stat.isDirectory()) {
-        fileArr.push(Object.assign({}, {
-          isDirectory: true,
-          path: path,
-          name: encodeURIComponent(name + '/'),
-        },
-          stat
-        ));
-      }
+      return Object.assign({}, {
+        path: filePath + (stat.isDirectory() ? "/" : ""),
+        name: encodeURIComponent(name + (stat.isDirectory() ? "/" : "")),
+      },
+        stat
+      );
     } catch (err) {
       console.error('error:', err.message);
     }
-  });
-
-  return fileArr;
+  }).filter(item => item != null);
 };
 
 /* GET users listing. */

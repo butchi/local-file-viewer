@@ -66,11 +66,16 @@ v-layout
         audio(:src="blobToMedia(fObj.content)", controls)
     v-card(v-else-if="fObj.type === 'file'")
       v-card-title
-        | {{ fObj.name }}
+        | {{ fObj.path }}
       v-card-text
         | {{ fObj.contentType }}
+    v-card(v-else, loading="true")
+      v-card-title
+        | {{ fObj.path }}
+      v-card-text
+        | loading
 
-  v-card(v-if="curFileArr")
+  v-card(v-if="curFileArr && curFileArr.length > 0")
     v-btn.ma-1(
       color="primary",
       :text="dirMode == 'grid'",
@@ -153,7 +158,7 @@ export default {
       title: "Local file viewer",
       itemArr: [
         {
-          id: rootPath,
+          id: rootPath + "/",
           name: "~/",
           children: [],
         },
@@ -199,37 +204,47 @@ export default {
       const path = pathArr[0];
 
       if (path == null) {
-      } else if (path[path.length - 1] === "/") {
+      } else if (this.isDirectory(path)) {
         this.openDirectory(path);
       } else {
         this.openFile(path);
       }
     },
     fileClickHandler(file) {
-      if (file.isDirectory) {
+      if (this.isDirectory(file.path)) {
         this.openDirectory(file.path);
       } else {
         this.openFile(file.path);
       }
     },
-    async openDirectory(path) {
-      this.curFileArr = await this.ls(path);
+    async openDirectory(dirPath) {
+      this.curFileArr = await this.ls(dirPath);
     },
     async openFile(path) {
-      this.fObj = await this.cat(path);
-
       this.dialog = true;
+
+      this.fObj = {
+        path,
+      };
+
+      this.fObj = await this.cat(path);
     },
-    async ls(path) {
+    async ls(dirPath) {
       const res = await fetch(
-        `//localhost:8000/api/ls?path=${encodeURIComponent(path)}`
+        `//localhost:8000/api/ls?path=${encodeURIComponent(dirPath)}`
       );
 
       const json = await res.json();
 
       const fileArr = json;
 
-      return fileArr.filter((item) => item.name[0] !== ".");
+      if (fileArr == null) {
+        return [];
+      } else if (fileArr.length === 0) {
+        return [];
+      } else {
+        return fileArr.filter((item = { name: "" }) => item.name[0] !== ".");
+      }
     },
     async cat(path) {
       const res = await fetch(
@@ -292,13 +307,16 @@ export default {
             id: path + name,
             name,
           },
-          name[name.length - 1] === "/" ? { children: [] } : {}
+          this.isDirectory(name) ? { children: [] } : {}
         );
 
         return ret;
       });
 
       return json;
+    },
+    isDirectory(name) {
+      return name[name.length - 1] === "/" || name[name.length - 1] === "\\";
     },
     blobToMedia(blob) {
       return URL.createObjectURL(blob);
