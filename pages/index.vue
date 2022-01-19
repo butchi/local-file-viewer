@@ -92,7 +92,11 @@ v-layout
     v-card-text(v-if="dirMode == 'grid'")
       v-row
         v-col(v-for="(file, i) in curFileArr", :key="i", cols="2")
-          v-card(min-height="160", @click.stop="fileClickHandler(file)")
+          v-card(
+            min-height="160",
+            min-width="160",
+            @click.stop="fileClickHandler(file)"
+          )
             v-card-title.text-caption
               | {{ decodeURIComponent(file.name) }}
 
