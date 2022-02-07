@@ -7,6 +7,7 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var lsRouter = require('./routes/api/ls');
 var catRouter = require('./routes/api/cat');
+var ffprobeRouter = require('./routes/api/ffprobe');
 
 var app = express();
 
@@ -40,6 +41,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/api/ls', lsRouter);
 app.use('/api/cat', catRouter);
+app.use('/api/ffprobe', ffprobeRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
