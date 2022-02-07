@@ -3,9 +3,7 @@ v-layout
   v-navigation-drawer(
     v-model="drawer",
     :mini-variant="miniVariant",
-    :mini-variant-width="150",
     :clipped="clipped",
-    width="690",
     expand-on-hover,
     fixed,
     app
@@ -39,12 +37,8 @@ v-layout
       v-icon
         | mdi-minus
     v-toolbar-title(v-text="title")
-    v-spacer
-    v-btn(icon, @click.stop="rightDrawer = !rightDrawer")
-      v-icon
-        | mdi-menu
 
-  v-dialog(v-model="dialog", width="960")
+  v-dialog(v-model="dialog")
     v-card(v-if="fObj.type === 'application'")
       v-card-title
         | {{ fObj.path }}
@@ -129,14 +123,6 @@ v-layout
         v-flex(v-else-if="item.size < 1024 * 1024 * 1024 * 1024")
           | {{ Math.ceil(item.size / 1024 / 1024 / 1024) + 'GB' }}
 
-  v-navigation-drawer(v-model="rightDrawer", :right="right", temporary, fixed)
-    v-list
-      v-list-item(@click.native="right = !right")
-        v-list-item-action
-          v-icon(light)
-            | mdi-repeat
-        v-list-item-title
-          | Switch drawer (click me)
   v-footer(:absolute="!fixed", app)
     span
       | &copy; {{ new Date().getFullYear() }}
@@ -155,7 +141,7 @@ export default {
       clipped: false,
       drawer: true,
       fixed: false,
-      miniVariant: false,
+      miniVariant: true,
       right: true,
       rightDrawer: false,
       dialog: false,
