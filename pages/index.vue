@@ -241,25 +241,25 @@ export default {
               }
             }
 
-            if (metadata && metadata.format && metadata.format.tags) {
-              this.$set(this.curFileArr[idx], "metadata", metadata);
+            //- if (metadata && metadata.format && metadata.format.tags) {
+            //-   this.$set(this.curFileArr[idx], "metadata", metadata);
 
-              //- const { artist, album, title } = metadata.format.tags;
+            //-   const { artist, album, title } = metadata.format.tags;
 
-              //- if (album && artist && title) {
-              //-   this.artwork({ artist, album, title }).then((res) => {
-              //-     res.json().then((artworkUrl) => {
-              //-       this.$set(this.curFileArr[idx], "artworkUrl", artworkUrl);
-              //-     });
-              //-   });
-              //- }
-            }
+            //-   if (album && artist && title) {
+            //-     this.artwork({ artist, album, title }).then((res) => {
+            //-       res.json().then((artworkUrl) => {
+            //-         this.$set(this.curFileArr[idx], "artworkUrl", artworkUrl);
+            //-       });
+            //-     });
+            //-   }
+            //- }
           });
         });
       });
 
       // ffprobeの処理が全部終わったらここで追加処理
-      Promise.all(promiseArr).then((res) => {});
+      Promise.all(promiseArr).then(() => {});
     },
     async openFile(path) {
       this.dialog = true;
