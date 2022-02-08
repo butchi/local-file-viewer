@@ -262,10 +262,6 @@ export default {
         type = "image";
       }
 
-      if (contentType.match(/^image\//g)) {
-        type = "image";
-      }
-
       if (contentType.match(/^video\//g)) {
         type = "video";
       }
