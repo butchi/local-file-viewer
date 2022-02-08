@@ -69,7 +69,7 @@ v-layout
       v-card-text
         | loading
 
-  v-card(v-if="curFileArr && curFileArr.length > 0")
+  v-card(v-if="curFileArr instanceof Array")
     v-btn.ma-1(
       color="primary",
       :text="dirMode == 'grid'",
@@ -91,6 +91,7 @@ v-layout
             min-width="160",
             @click.stop="fileClickHandler(file)"
           )
+            v-img(:src="file.artworkUrl")
             v-card-title.text-caption
               | {{ decodeURIComponent(file.name) }}
 
@@ -133,7 +134,7 @@ import Logo from "~/components/Logo.vue";
 import VuetifyLogo from "~/components/VuetifyLogo.vue";
 
 const rootPath = "C:\\\\Users\\iwabuchi-yuki-butchi\\";
-// const rootPath = "/Users/iwabuchi-yuki-butchi/";
+//- const rootPath = "/Users/iwabuchi-yuki-butchi/";
 
 export default {
   data() {
@@ -208,7 +209,38 @@ export default {
       }
     },
     async openDirectory(dirPath) {
-      this.curFileArr = await this.ls(dirPath);
+      this.curFileArr.length = 0;
+
+      const curFileArr = await this.ls(dirPath);
+
+      const promiseArr = [...curFileArr].map(async (file, idx) => {
+        return this.ffprobe(file.path).then((res) => {
+          this.curFileArr.push(file);
+
+          if (!res.json) {
+            return;
+          }
+
+          res.json().then((metadata) => {
+            if (metadata && metadata.format && metadata.format.tags) {
+              const { artist, album, title } = metadata.format.tags;
+
+              this.$set(this.curFileArr[idx], "metadata", metadata);
+
+              if (album && artist && title) {
+                this.artwork({ artist, album, title }).then((res) => {
+                  res.json().then((artworkUrl) => {
+                    this.$set(this.curFileArr[idx], "artworkUrl", artworkUrl);
+                  });
+                });
+              }
+            }
+          });
+        });
+      });
+
+      // ffprobeの処理が全部終わったらここで追加処理
+      Promise.all(promiseArr).then((res) => {});
     },
     async openFile(path) {
       this.dialog = true;
@@ -278,6 +310,24 @@ export default {
         contentType,
         content: blob,
       };
+    },
+    async ffprobe(path) {
+      if (this.isDirectory(path)) {
+        return {};
+      }
+
+      const res = await fetch(
+        `//localhost:8000/api/ffprobe?path=${encodeURIComponent(path)}`
+      );
+
+      return res;
+    },
+    async artwork({ artist, album, title }) {
+      const res = await fetch(
+        `//localhost:8000/api/artwork?artist=${artist}&album=${album}&title=${title}`
+      );
+
+      return res;
     },
     async fetchDirectory(obj) {
       const path = obj.id;
