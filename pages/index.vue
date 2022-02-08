@@ -91,7 +91,8 @@ v-layout
             min-width="160",
             @click.stop="fileClickHandler(file)"
           )
-            v-img(:src="file.artworkUrl")
+            v-img(v-if="file.thumbnail", :src="file.thumbnail")
+            v-img(v-if="file.artworkUrl", :src="file.artworkUrl")
             v-card-title.text-caption
               | {{ decodeURIComponent(file.name) }}
 
@@ -222,6 +223,20 @@ export default {
           }
 
           res.json().then((metadata) => {
+            if (metadata && metadata.format) {
+              if (metadata.format.format_name.match(/image/g)) {
+                this.thumbnail(file.path).then((res) => {
+                  res.blob().then((blob) => {
+                    this.$set(
+                      this.curFileArr[idx],
+                      "thumbnail",
+                      this.blobToMedia(blob)
+                    );
+                  });
+                });
+              }
+            }
+
             if (metadata && metadata.format && metadata.format.tags) {
               const { artist, album, title } = metadata.format.tags;
 
@@ -318,6 +333,13 @@ export default {
 
       const res = await fetch(
         `//localhost:8000/api/ffprobe?path=${encodeURIComponent(path)}`
+      );
+
+      return res;
+    },
+    async thumbnail(path) {
+      const res = await fetch(
+        `//localhost:8000/api/thumbnail?path=${encodeURIComponent(path)}`
       );
 
       return res;
