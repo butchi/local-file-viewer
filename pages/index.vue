@@ -242,13 +242,13 @@ export default {
 
               this.$set(this.curFileArr[idx], "metadata", metadata);
 
-              if (album && artist && title) {
-                this.artwork({ artist, album, title }).then((res) => {
-                  res.json().then((artworkUrl) => {
-                    this.$set(this.curFileArr[idx], "artworkUrl", artworkUrl);
-                  });
-                });
-              }
+              //- if (album && artist && title) {
+              //-   this.artwork({ artist, album, title }).then((res) => {
+              //-     res.json().then((artworkUrl) => {
+              //-       this.$set(this.curFileArr[idx], "artworkUrl", artworkUrl);
+              //-     });
+              //-   });
+              //- }
             }
           });
         });
