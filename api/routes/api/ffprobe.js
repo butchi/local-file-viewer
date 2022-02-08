@@ -7,12 +7,15 @@ router.get('/', function (req, res, next) {
     try {
         const { path } = req.query;
 
-        ffprobe(path, (err, metadata) => {
-            res.json(metadata);
+        ffprobe(decodeURIComponent(path), (err, metadata) => {
+            if (err) {
+                res.json({});
+            } else {
+                res.json(metadata);
+            }
         });
-
     } catch (err) {
-        console.log(`Error: ${err}`)
+        res.json(err);
     }
 });
 
