@@ -214,7 +214,7 @@ export default {
 
       const curFileArr = await this.ls(dirPath);
 
-      const promiseArr = [...curFileArr].map(async (file, idx) => {
+      const promiseArr = [...curFileArr].map(async (file) => {
         return this.ffprobe(file.path).then((res) => {
           this.curFileArr.push(file);
 
@@ -224,7 +224,11 @@ export default {
 
           res.json().then((metadata) => {
             if (metadata && metadata.format) {
-              if (metadata.format.format_name.match(/image/g)) {
+              if (metadata.format.format_name.match(/image|png/g)) {
+                const idx = this.curFileArr.findIndex(
+                  (f) => f.path === file.path
+                );
+
                 this.thumbnail(file.path).then((res) => {
                   res.blob().then((blob) => {
                     this.$set(
