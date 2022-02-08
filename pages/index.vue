@@ -224,7 +224,8 @@ export default {
 
           res.json().then((metadata) => {
             if (metadata && metadata.format) {
-              if (metadata.format.format_name.match(/image|png/g)) {
+              console.log(metadata.format.format_name);
+              if (metadata.format.format_name.match(/image|png|jpeg/g)) {
                 const idx = this.curFileArr.findIndex(
                   (f) => f.path === file.path
                 );
