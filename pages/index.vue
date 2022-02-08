@@ -238,9 +238,9 @@ export default {
             }
 
             if (metadata && metadata.format && metadata.format.tags) {
-              const { artist, album, title } = metadata.format.tags;
-
               this.$set(this.curFileArr[idx], "metadata", metadata);
+
+              //- const { artist, album, title } = metadata.format.tags;
 
               //- if (album && artist && title) {
               //-   this.artwork({ artist, album, title }).then((res) => {
