@@ -92,6 +92,7 @@ v-layout
             @click.stop="fileClickHandler(file)"
           )
             v-img(v-if="file.thumbnail", :src="file.thumbnail")
+            v-img(v-if="file.videoThumb", :src="file.videoThumb")
             v-img(v-if="file.artworkUrl", :src="file.artworkUrl")
             v-card-title.text-caption
               | {{ decodeURIComponent(file.name) }}
@@ -224,7 +225,6 @@ export default {
 
           res.json().then((metadata) => {
             if (metadata && metadata.format) {
-              console.log(metadata.format.format_name);
               if (metadata.format.format_name.match(/image|png|jpeg/g)) {
                 const idx = this.curFileArr.findIndex(
                   (f) => f.path === file.path
@@ -239,6 +239,25 @@ export default {
                     );
                   });
                 });
+              }
+
+              if (metadata.format.format_name.match(/mov|mp4/g)) {
+                // ffmpegにファイル2GB制限があったので大きい動画はサムネ表示できない
+                if (metadata.format.size < 2 * 1024 * 1024 * 1024) {
+                  const idx = this.curFileArr.findIndex(
+                    (f) => f.path === file.path
+                  );
+
+                  this.videoThumb(file.path).then((res) => {
+                    res.blob().then((blob) => {
+                      this.$set(
+                        this.curFileArr[idx],
+                        "videoThumb",
+                        this.blobToMedia(blob)
+                      );
+                    });
+                  });
+                }
               }
             }
 
@@ -345,6 +364,13 @@ export default {
     async thumbnail(path) {
       const res = await fetch(
         `//localhost:8000/api/thumbnail?path=${encodeURIComponent(path)}`
+      );
+
+      return res;
+    },
+    async videoThumb(path) {
+      const res = await fetch(
+        `//localhost:8000/api/videothumb?path=${encodeURIComponent(path)}`
       );
 
       return res;

@@ -10,6 +10,7 @@ var catRouter = require('./routes/api/cat');
 var ffprobeRouter = require('./routes/api/ffprobe');
 var artworkRouter = require('./routes/api/artwork');
 var thumbnailRouter = require('./routes/api/thumbnail');
+var videothumbRouter = require('./routes/api/videothumb');
 
 var app = express();
 
@@ -46,6 +47,7 @@ app.use('/api/cat', catRouter);
 app.use('/api/ffprobe', ffprobeRouter);
 app.use('/api/artwork', artworkRouter);
 app.use('/api/thumbnail', thumbnailRouter);
+app.use('/api/videothumb', videothumbRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
