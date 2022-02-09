@@ -27,6 +27,9 @@ v-layout
 
   v-app-bar(:clipped-left="clipped", fixed, app)
     v-app-bar-nav-icon(@click.stop="drawer = !drawer")
+    v-btn(icon, @click.stop="openParentDirectory")
+      v-icon
+        | mdi-arrow-up-bold
     v-toolbar-title(v-text="title")
 
   v-dialog(v-model="dialog")
@@ -87,6 +90,9 @@ v-layout
             v-img(v-if="file.artworkUrl", :src="file.artworkUrl")
             v-card-title.text-caption
               | {{ decodeURIComponent(file.name) }}
+              v-card-text(v-if="isDirectory(file.path)")
+                v-icon(x-large)
+                  | mdi-folder
 
     v-data-table(
       v-else,
@@ -142,6 +148,7 @@ export default {
       rightDrawer: false,
       dialog: false,
       title: "Local file viewer",
+      curDirPath: rootPath,
       itemArr: [
         {
           id: rootPath,
@@ -205,6 +212,10 @@ export default {
     },
     async openDirectory(dirPath) {
       this.curFileArr.length = 0;
+
+      this.curDirPath = dirPath;
+
+      this.title = this.curDirPath;
 
       const curFileArr = await this.ls(dirPath);
 
@@ -273,6 +284,11 @@ export default {
 
       // ffprobeの処理が全部終わったらここで追加処理
       Promise.all(promiseArr).then(() => {});
+    },
+    async openParentDirectory() {
+      this.curDirPath = path.join(this.curDirPath, "../");
+
+      this.openDirectory(this.curDirPath);
     },
     async openFile(filePath) {
       this.dialog = true;
@@ -400,6 +416,9 @@ export default {
     isDirectory(name) {
       const n = decodeURIComponent(name);
       return n[n.length - 1] === "/";
+    },
+    extname(filePath) {
+      return path.extname(filePath);
     },
     blobToMedia(blob) {
       return URL.createObjectURL(blob);
