@@ -30,6 +30,11 @@ v-layout
     v-btn(icon, @click.stop="openParentDirectory")
       v-icon
         | mdi-arrow-up-bold
+    v-btn(icon, @click.stop="toggleRecursive")
+      v-icon(v-if="recursive")
+        | mdi-folder-open
+      v-icon(v-else)
+        | mdi-folder
     v-toolbar-title(v-text="title")
 
   v-dialog(v-model="dialog")
@@ -157,6 +162,7 @@ export default {
         },
       ],
       dirMode: "grid",
+      recursive: false,
       open: [],
       curFileArr: [],
       fObj: {},
@@ -217,7 +223,9 @@ export default {
 
       this.title = this.curDirPath;
 
-      const curFileArr = await this.ls(dirPath);
+      const curFileArr = await this.ls(dirPath, {
+        recursive: this.recursive,
+      });
 
       const promiseArr = [...curFileArr].map(async (file) => {
         return this.ffprobe(file.path).then((res) => {
@@ -299,10 +307,25 @@ export default {
 
       this.fObj = await this.cat(filePath);
     },
-    async ls(dirPath) {
-      const res = await fetch(
-        `//localhost:8000/api/ls?path=${encodeURIComponent(dirPath)}`
-      );
+    toggleRecursive() {
+      this.recursive = !this.recursive;
+
+      this.openDirectory(this.curDirPath);
+    },
+    async ls(dirPath, { recursive = false }) {
+      let res;
+
+      if (recursive) {
+        res = await fetch(
+          `//localhost:8000/api/ls?path=${encodeURIComponent(
+            dirPath
+          )}&recursive=true`
+        );
+      } else {
+        res = await fetch(
+          `//localhost:8000/api/ls?path=${encodeURIComponent(dirPath)}`
+        );
+      }
 
       const json = await res.json();
 
@@ -394,7 +417,9 @@ export default {
     async fetchDirectory(obj) {
       const dirPath = obj.id;
 
-      const json = await this.ls(dirPath);
+      const json = await this.ls(dirPath, {
+        recursive: this.recursive,
+      });
 
       obj.children = this.itemArr.children = json.map((item) => {
         const name = decodeURIComponent(item.name);
