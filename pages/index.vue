@@ -132,10 +132,12 @@ v-layout
 </template>
 
 <script>
+import path from "path";
+
 import Logo from "~/components/Logo.vue";
 import VuetifyLogo from "~/components/VuetifyLogo.vue";
 
-const rootPath = "C:\\\\Users\\iwabuchi-yuki-butchi\\";
+const rootPath = "C://Users/iwabuchi-yuki-butchi/";
 //- const rootPath = "/Users/iwabuchi-yuki-butchi/";
 
 export default {
@@ -406,7 +408,7 @@ export default {
     },
     isDirectory(name) {
       const n = decodeURIComponent(name);
-      return n[n.length - 1] === "/" || n[n.length - 1] === "\\";
+      return n[n.length - 1] === "/";
     },
     blobToMedia(blob) {
       return URL.createObjectURL(blob);

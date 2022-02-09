@@ -9,15 +9,13 @@ const listFiles = dirPath => {
 
   return nameArr.map(name => {
     try {
-      const filePath = path.join(dirPath, name);
+      const filePath = path.posix.join(dirPath, name);
       const stat = fs.statSync(filePath);
 
-      return Object.assign({}, {
+      return Object.assign({}, stat, {
         path: filePath + (stat.isDirectory() ? "/" : ""),
         name: encodeURIComponent(name + (stat.isDirectory() ? "/" : "")),
-      },
-        stat
-      );
+      });
     } catch (err) {
       console.error('error:', err.message);
     }
