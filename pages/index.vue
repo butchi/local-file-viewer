@@ -60,7 +60,7 @@ v-layout
       v-card-text
         | loading
 
-  v-card(v-if="curFileArr instanceof Array")
+  v-card(v-if="curFileArr instanceof Array", min-width="1280")
     v-btn.ma-1(
       color="primary",
       :text="dirMode == 'grid'",
