@@ -194,13 +194,13 @@ export default {
   computed: {},
   methods: {
     activeHandler(pathArr) {
-      const path = pathArr[0];
+      const objPath = pathArr[0];
 
-      if (path == null) {
-      } else if (this.isDirectory(path)) {
-        this.openDirectory(path);
+      if (objPath == null) {
+      } else if (this.isDirectory(objPath)) {
+        this.openDirectory(objPath);
       } else {
-        this.openFile(path);
+        this.openFile(objPath);
       }
     },
     fileClickHandler(file) {
@@ -243,7 +243,7 @@ export default {
 
               if (metadata.format.format_name.match(/mov|mp4/g)) {
                 // ffmpegにファイル2GB制限があったので大きい動画はサムネ表示できない
-                if (metadata.format.size < 2 * 1024 * 1024 * 1024) {
+                if (metadata.format.size < 2000000000) {
                   const idx = this.curFileArr.findIndex(
                     (f) => f.path === file.path
                   );
@@ -281,14 +281,14 @@ export default {
       // ffprobeの処理が全部終わったらここで追加処理
       Promise.all(promiseArr).then(() => {});
     },
-    async openFile(path) {
+    async openFile(filePath) {
       this.dialog = true;
 
       this.fObj = {
-        path,
+        path: filePath,
       };
 
-      this.fObj = await this.cat(path);
+      this.fObj = await this.cat(filePath);
     },
     async ls(dirPath) {
       const res = await fetch(
@@ -307,9 +307,9 @@ export default {
         return fileArr.filter((item = { name: "" }) => item.name[0] !== ".");
       }
     },
-    async cat(path) {
+    async cat(filePath) {
       const res = await fetch(
-        `//localhost:8000/api/cat?path=${encodeURIComponent(path)}`
+        `//localhost:8000/api/cat?path=${encodeURIComponent(filePath)}`
       );
 
       const contentType = res.headers.get("Content-Type");
@@ -322,7 +322,7 @@ export default {
         const text = await res.text();
 
         return {
-          path,
+          path: filePath,
           type,
           contentType,
           content: text,
@@ -344,33 +344,33 @@ export default {
       const blob = await res.blob();
 
       return {
-        path,
+        path: filePath,
         type,
         contentType,
         content: blob,
       };
     },
-    async ffprobe(path) {
-      if (this.isDirectory(path)) {
+    async ffprobe(filePath) {
+      if (this.isDirectory(filePath)) {
         return {};
       }
 
       const res = await fetch(
-        `//localhost:8000/api/ffprobe?path=${encodeURIComponent(path)}`
+        `//localhost:8000/api/ffprobe?path=${encodeURIComponent(filePath)}`
       );
 
       return res;
     },
-    async thumbnail(path) {
+    async thumbnail(filePath) {
       const res = await fetch(
-        `//localhost:8000/api/thumbnail?path=${encodeURIComponent(path)}`
+        `//localhost:8000/api/thumbnail?path=${encodeURIComponent(filePath)}`
       );
 
       return res;
     },
-    async videoThumb(path) {
+    async videoThumb(filePath) {
       const res = await fetch(
-        `//localhost:8000/api/videothumb?path=${encodeURIComponent(path)}`
+        `//localhost:8000/api/videothumb?path=${encodeURIComponent(filePath)}`
       );
 
       return res;
@@ -383,9 +383,9 @@ export default {
       return res;
     },
     async fetchDirectory(obj) {
-      const path = obj.id;
+      const dirPath = obj.id;
 
-      const json = await this.ls(path);
+      const json = await this.ls(dirPath);
 
       obj.children = this.itemArr.children = json.map((item) => {
         const name = decodeURIComponent(item.name);
@@ -393,7 +393,7 @@ export default {
         const ret = Object.assign(
           {},
           {
-            id: path + name,
+            id: dirPath + name,
             name,
           },
           this.isDirectory(name) ? { children: [] } : {}
