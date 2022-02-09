@@ -36,6 +36,9 @@ v-layout
       v-icon(v-else)
         | mdi-folder
     v-toolbar-title(v-text="title")
+    v-spacer
+    v-btn(href="//localhost:8000/login")
+      | spotify auth
 
   v-dialog(v-model="dialog")
     v-card(v-if="fObj.type === 'application'")
@@ -273,19 +276,39 @@ export default {
               }
             }
 
-            //- if (metadata && metadata.format && metadata.format.tags) {
-            //-   this.$set(this.curFileArr[idx], "metadata", metadata);
+            if (metadata && metadata.format && metadata.format.tags) {
+              const idx = this.curFileArr.findIndex(
+                (f) => f.path === file.path
+              );
 
-            //-   const { artist, album, title } = metadata.format.tags;
+              this.$set(this.curFileArr[idx], "metadata", metadata);
 
-            //-   if (album && artist && title) {
-            //-     this.artwork({ artist, album, title }).then((res) => {
-            //-       res.json().then((artworkUrl) => {
-            //-         this.$set(this.curFileArr[idx], "artworkUrl", artworkUrl);
-            //-       });
-            //-     });
-            //-   }
-            //- }
+              let { artist, album, title } = metadata.format.tags;
+
+              const parentPath0 = file.path;
+              const parentPath1 = path.join(parentPath0, "../");
+              const parentPath2 = path.join(parentPath1, "../");
+
+              const parentName0 = path.basename(parentPath0);
+              const parentName1 = path.basename(parentPath1);
+              const parentName2 = path.basename(parentPath2);
+
+              title = title || parentName0;
+              album = album || parentName1;
+              artist = artist || parentName2;
+
+              const query = `${artist} ${album}`;
+
+              console.log(query);
+
+              this.artwork({ query }).then((res) => {
+                res.json().then((artworkUrl) => {
+                  console.log(artworkUrl);
+
+                  this.$set(this.curFileArr[idx], "artworkUrl", artworkUrl);
+                });
+              });
+            }
           });
         });
       });
@@ -295,6 +318,8 @@ export default {
     },
     async openParentDirectory() {
       this.curDirPath = path.join(this.curDirPath, "../");
+
+      this.recursive = false;
 
       this.openDirectory(this.curDirPath);
     },
@@ -407,10 +432,8 @@ export default {
 
       return res;
     },
-    async artwork({ artist, album, title }) {
-      const res = await fetch(
-        `//localhost:8000/api/artwork?artist=${artist}&album=${album}&title=${title}`
-      );
+    async artwork({ query }) {
+      const res = await fetch(`//localhost:8000/api/artwork?q=${query}`);
 
       return res;
     },
