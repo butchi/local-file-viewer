@@ -297,14 +297,14 @@ export default {
               album = album || parentName1;
               artist = artist || parentName2;
 
-              const query = `${artist} ${album}`;
-
-              console.log(query);
+              const query = `${artist} ${album}`
+                .replaceAll(/\([^\)]+\)/g, "")
+                .replaceAll(/（[^）]+）/g, "")
+                .replaceAll(/[，、．。,\.]/g, "")
+                .replaceAll(/\- Single/g, "");
 
               this.artwork({ query }).then((res) => {
                 res.json().then((artworkUrl) => {
-                  console.log(artworkUrl);
-
                   this.$set(this.curFileArr[idx], "artworkUrl", artworkUrl);
                 });
               });
