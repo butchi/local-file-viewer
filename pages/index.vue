@@ -230,91 +230,84 @@ export default {
         recursive: this.recursive,
       });
 
-      const promiseArr = [...curFileArr].map(async (file) => {
-        return this.ffprobe(file.path).then((res) => {
-          this.curFileArr.push(file);
+      curFileArr.map(async (file) => {
+        const res = await this.ffprobe(file.path);
 
-          if (!res.json) {
-            return;
+        this.curFileArr.push(file);
+
+        if (!res.json) {
+          return;
+        }
+
+        const metadata = await res.json();
+
+        if (metadata && metadata.format) {
+          if (metadata.format.format_name.match(/image|png|jpeg/g)) {
+            const idx = this.curFileArr.findIndex((f) => f.path === file.path);
+
+            this.thumbnail(file.path).then((res) => {
+              res.blob().then((blob) => {
+                this.$set(
+                  this.curFileArr[idx],
+                  "thumbnail",
+                  this.blobToMedia(blob)
+                );
+              });
+            });
           }
 
-          res.json().then((metadata) => {
-            if (metadata && metadata.format) {
-              if (metadata.format.format_name.match(/image|png|jpeg/g)) {
-                const idx = this.curFileArr.findIndex(
-                  (f) => f.path === file.path
-                );
-
-                this.thumbnail(file.path).then((res) => {
-                  res.blob().then((blob) => {
-                    this.$set(
-                      this.curFileArr[idx],
-                      "thumbnail",
-                      this.blobToMedia(blob)
-                    );
-                  });
-                });
-              }
-
-              if (metadata.format.format_name.match(/mov|mp4/g)) {
-                // ffmpegにファイル2GB制限があったので大きい動画はサムネ表示できない
-                if (metadata.format.size < 2000000000) {
-                  const idx = this.curFileArr.findIndex(
-                    (f) => f.path === file.path
-                  );
-
-                  this.videoThumb(file.path).then((res) => {
-                    res.blob().then((blob) => {
-                      this.$set(
-                        this.curFileArr[idx],
-                        "videoThumb",
-                        this.blobToMedia(blob)
-                      );
-                    });
-                  });
-                }
-              }
-            }
-
-            if (metadata && metadata.format && metadata.format.tags) {
+          if (metadata.format.format_name.match(/mov|mp4/g)) {
+            // ffmpegにファイル2GB制限があったので大きい動画はサムネ表示できない
+            if (metadata.format.size < 2000000000) {
               const idx = this.curFileArr.findIndex(
                 (f) => f.path === file.path
               );
 
-              this.$set(this.curFileArr[idx], "metadata", metadata);
-
-              let { artist, album, title } = metadata.format.tags;
-
-              const parentPath0 = file.path;
-              const parentPath1 = path.join(parentPath0, "../");
-              const parentPath2 = path.join(parentPath1, "../");
-
-              const parentName0 = path.basename(parentPath0);
-              const parentName1 = path.basename(parentPath1);
-              const parentName2 = path.basename(parentPath2);
-
-              title = title || parentName0;
-              album = album || parentName1;
-              artist = artist || parentName2;
-
-              const query = `${artist} ${album}`
-                .replaceAll(/\([^\)]+\)/g, "")
-                .replaceAll(/（[^）]+）/g, "")
-                .replaceAll(/[，、．。,\.]/g, "")
-                .replaceAll(/\- Single/g, "");
-
-              this.artwork({ query }).then((res) => {
-                res.json().then((artworkUrl) => {
-                  this.$set(this.curFileArr[idx], "artworkUrl", artworkUrl);
+              this.videoThumb(file.path).then((res) => {
+                res.blob().then((blob) => {
+                  this.$set(
+                    this.curFileArr[idx],
+                    "videoThumb",
+                    this.blobToMedia(blob)
+                  );
                 });
               });
             }
-          });
-        });
-      });
+          }
+        }
 
-      // ffprobeの処理が全部終わったらここで追加処理
-      Promise.all(promiseArr).then(() => {});
+        if (metadata && metadata.format && metadata.format.tags) {
+          const idx = this.curFileArr.findIndex((f) => f.path === file.path);
+
+          this.$set(this.curFileArr[idx], "metadata", metadata);
+
+          let { artist, album, title } = metadata.format.tags;
+
+          const parentPath0 = file.path;
+          const parentPath1 = path.join(parentPath0, "../");
+          const parentPath2 = path.join(parentPath1, "../");
+
+          const parentName0 = path.basename(parentPath0);
+          const parentName1 = path.basename(parentPath1);
+          const parentName2 = path.basename(parentPath2);
+
+          title = title || parentName0;
+          album = album || parentName1;
+          artist = artist || parentName2;
+
+          const query = `${artist} ${album}`
+            .replaceAll(/\([^\)]+\)/g, "")
+            .replaceAll(/（[^）]+）/g, "")
+            .replaceAll(/[，、．。,\.]/g, "")
+            .replaceAll(/\- Single/g, "");
+
+          this.artwork({ query }).then((res) => {
+            res.json().then((artworkUrl) => {
+              this.$set(this.curFileArr[idx], "artworkUrl", artworkUrl);
+            });
+          });
+        }
+      });
     },
     async openParentDirectory() {
       this.curDirPath = path.join(this.curDirPath, "../");
