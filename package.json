@@ -6,7 +6,7 @@
     "serve": "nuxt-ts serve",
     "build": "nuxt-ts build",
     "dev": "nuxt",
-    "export": "nuxt-ts export",
+    "generate": "nuxt-ts generate",
     "start": "nuxt-ts start"
   },
   "dependencies": {
