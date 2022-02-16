@@ -28,7 +28,7 @@ router.get('/', function (req, res, next) {
                 res.end(null);
             })
             .on('end', (stdout, stderr) => {
-                const thumbPath = `temp\\${md5hex(path)}.png`;
+                const thumbPath = `temp/${md5hex(path)}.png`;
 
                 fs.readFile(thumbPath, (err, buf) => {
                     if (err) {
