@@ -24,6 +24,7 @@
     "stylus": "^0.54.7",
     "stylus-loader": "^3.0.2",
     "vue-cli-plugin-vuetify": "^2.4.1",
+    "vue-md-player": "^0.1.4",
     "vuetify-loader": "^1.7.0"
   }
 }
