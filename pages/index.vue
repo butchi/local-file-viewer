@@ -243,6 +243,7 @@ export default {
         this.openFile(file.path);
       }
     },
+    // TODO: 非同期処理が複数あってリアクティブが不安定なのでPromise.allしてやりたい
     async openDirectory(dirPath) {
       this.curFileArr.length = 0;
 
