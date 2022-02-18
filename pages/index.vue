@@ -30,8 +30,10 @@ v-layout
     v-btn(icon, @click.stop="openParentDirectory")
       v-icon
         | mdi-arrow-up-bold
-    v-btn(icon, @click.stop="toggleRecursive")
-      v-icon(v-if="recursive")
+    v-btn(icon, @click.stop="toggleOpenMode")
+      v-icon(v-if="openMode === 'file'")
+        | mdi-folder-open-outline
+      v-icon(v-else-if="openMode === 'folder'")
         | mdi-folder-open
       v-icon(v-else)
         | mdi-folder
@@ -40,32 +42,50 @@ v-layout
     v-btn(href="//localhost:8000/login")
       | spotify auth
 
-  v-dialog(v-model="dialog")
-    v-card(v-if="fObj.type === 'application'")
+  v-dialog(v-if="fObj", v-model="dialog")
+    v-card(v-show="fObj.type === 'application'")
       v-card-title
         | {{ fObj.path }}
-      v-card-text(v-html="stringToHtml(fObj.content)")
-    v-card(v-else-if="fObj.type === 'image'")
-      v-card-title
-        | {{ fObj.path }}
-      v-card-text
-        v-img(:src="blobToMedia(fObj.content)", max-height="960", contain)
-    v-card(v-else-if="fObj.type === 'video'")
-      v-card-title
-        | {{ fObj.path }}
-      v-card-text
-        video(:src="blobToMedia(fObj.content)", width="100%", controls)
-    v-card(v-else-if="fObj.type === 'audio'")
+      v-card-text(
+        v-if="fObj.type === 'application'",
+        v-html="stringToHtml(fObj.content)"
+      )
+    v-card(v-show="fObj.type === 'image'")
       v-card-title
         | {{ fObj.path }}
       v-card-text
-        audio(:src="blobToMedia(fObj.content)", controls)
-    v-card(v-else-if="fObj.type === 'file'")
+        v-img(
+          v-if="fObj.type === 'image'",
+          :src="blobToMedia(fObj.content)",
+          max-height="960",
+          contain
+        )
+    v-card(v-show="fObj.type === 'video'")
+      v-card-title
+        | {{ fObj.path }}
+      v-card-text
+        video(
+          ref="video",
+          :src="fObj.type === 'video' && blobToMedia(fObj.content)",
+          width="100%",
+          controls
+        )
+    v-card(v-show="fObj.type === 'audio'")
+      v-card-title
+        | {{ fObj.path }}
+      v-card-text
+        audio(
+          ref="audio",
+          :src="fObj.type === 'audio' && blobToMedia(fObj.content)",
+          width="100%",
+          controls
+        )
+    v-card(v-show="fObj.type === 'file'")
       v-card-title
         | {{ fObj.path }}
       v-card-text
         | {{ fObj.contentType }}
-    v-card(v-else, loading="true")
+    v-card(v-show="fObj.type == null", loading="true")
       v-card-title
         | {{ fObj.path }}
       v-card-text
@@ -84,7 +104,6 @@ v-layout
       @click.stop="dirMode = 'detail'"
     )
       | 詳細
-
     v-card-text(v-if="dirMode == 'grid'")
       v-row
         v-col(v-for="(file, i) in curFileArr", :key="i", cols="2")
@@ -138,11 +157,14 @@ v-layout
 
 <script>
 import path from "path";
+import { audioPlayer, videoPlayer } from "vue-md-player";
+import "vue-md-player/dist/vue-md-player.css";
 
 import Logo from "~/components/Logo.vue";
 import VuetifyLogo from "~/components/VuetifyLogo.vue";
 
-const rootPath = "C://Users/iwabuchi-yuki-butchi/";
+const rootPath = "D://me/data/music/";
+//- const rootPath = "C://Users/iwabuchi-yuki-butchi/";
 //- const rootPath = "/Users/iwabuchi-yuki-butchi/";
 
 export default {
@@ -165,7 +187,7 @@ export default {
         },
       ],
       dirMode: "grid",
-      recursive: false,
+      openMode: "close",
       open: [],
       curFileArr: [],
       fObj: {},
@@ -196,6 +218,8 @@ export default {
   components: {
     Logo,
     VuetifyLogo,
+    audioPlayer,
+    videoPlayer,
   },
   mounted() {
     this.openDirectory(rootPath);
@@ -226,11 +250,29 @@ export default {
 
       this.title = this.curDirPath;
 
-      const curFileArr = await this.ls(dirPath, {
-        recursive: this.recursive,
+      const recursive = this.openMode === "file" || this.openMode === "folder";
+
+      let curFileArr = await this.ls(dirPath, {
+        recursive,
       });
 
-      curFileArr.map(async (file) => {
+      if (this.openMode === "folder") {
+        const dirArr = Array.from(
+          new Set(curFileArr.map((file) => file.dir))
+        ).map((dir) => {
+          const dirObj = {
+            path: dir,
+            name: path.basename(dir) + "/",
+            childArr: curFileArr.filter((file) => file.dir === dir),
+          };
+
+          return dirObj;
+        });
+
+        curFileArr = dirArr;
+      }
+
+      curFileArr.forEach(async (file) => {
         const res = await this.ffprobe(file.path);
 
         this.curFileArr.push(file);
@@ -274,45 +316,45 @@ export default {
               });
             }
           }
-        }
 
-        if (metadata && metadata.format && metadata.format.tags) {
-          const idx = this.curFileArr.findIndex((f) => f.path === file.path);
+          if (metadata.format.tags) {
+            const idx = this.curFileArr.findIndex((f) => f.path === file.path);
 
-          this.$set(this.curFileArr[idx], "metadata", metadata);
+            this.$set(this.curFileArr[idx], "metadata", metadata);
 
-          let { artist, album, title } = metadata.format.tags;
+            let { artist, album, title } = metadata.format.tags;
 
-          const parentPath0 = file.path;
-          const parentPath1 = path.join(parentPath0, "../");
-          const parentPath2 = path.join(parentPath1, "../");
+            const parentPath0 = file.path;
+            const parentPath1 = path.join(parentPath0, "../");
+            const parentPath2 = path.join(parentPath1, "../");
 
-          const parentName0 = path.basename(parentPath0);
-          const parentName1 = path.basename(parentPath1);
-          const parentName2 = path.basename(parentPath2);
+            const parentName0 = path.basename(parentPath0);
+            const parentName1 = path.basename(parentPath1);
+            const parentName2 = path.basename(parentPath2);
 
-          title = title || parentName0;
-          album = album || parentName1;
-          artist = artist || parentName2;
+            title = title || parentName0;
+            album = album || parentName1;
+            artist = artist || parentName2;
 
-          const query = `${artist} ${album}`
-            .replaceAll(/\([^\)]+\)/g, "")
-            .replaceAll(/（[^）]+）/g, "")
-            .replaceAll(/[，、．。,\.]/g, "")
-            .replaceAll(/\- Single/g, "");
+            const query = `${artist} ${album}`
+              .replaceAll(/\([^\)]+\)/g, "")
+              .replaceAll(/（[^）]+）/g, "")
+              .replaceAll(/[，、．。,\.]/g, "")
+              .replaceAll(/\- Single/g, "");
 
-          this.artwork({ query }).then((res) => {
-            res.json().then((artworkUrl) => {
-              this.$set(this.curFileArr[idx], "artworkUrl", artworkUrl);
+            this.artwork({ query }).then((res) => {
+              res.json().then((artworkUrl) => {
+                this.$set(this.curFileArr[idx], "artworkUrl", artworkUrl);
+              });
             });
-          });
+          }
         }
       });
     },
     async openParentDirectory() {
       this.curDirPath = path.join(this.curDirPath, "../");
 
-      this.recursive = false;
+      this.openMode = "";
 
       this.openDirectory(this.curDirPath);
     },
@@ -324,26 +366,44 @@ export default {
       };
 
       this.fObj = await this.cat(filePath);
+
+      const mediaElm = {
+        video: this.$refs.video,
+        audio: this.$refs.audio,
+      }[this.fObj.type];
+
+      const canPlayType = mediaElm.canPlayType(this.fObj.contentType);
+
+      // TODO: maybeのときは黄色ボタンを押したら再生とか
+      if (canPlayType === "maybe" || canPlayType === "") {
+        const res = await fetch(`//localhost:8000/api/ffmpeg?path=${filePath}`);
+
+        const content = await res.blob();
+
+        this.$set(this.fObj, "content", content);
+      }
     },
-    toggleRecursive() {
-      this.recursive = !this.recursive;
+    toggleOpenMode() {
+      if (this.openMode == null) {
+        this.openMode = "close";
+      } else if (this.openMode === "close") {
+        this.openMode = "folder";
+      } else if (this.openMode === "folder") {
+        this.openMode = "file";
+      } else if (this.openMode === "file") {
+        this.openMode = "close";
+      } else {
+        this.openMode = "close";
+      }
 
       this.openDirectory(this.curDirPath);
     },
     async ls(dirPath, { recursive = false }) {
-      let res;
-
-      if (recursive) {
-        res = await fetch(
-          `//localhost:8000/api/ls?path=${encodeURIComponent(
-            dirPath
-          )}&recursive=true`
-        );
-      } else {
-        res = await fetch(
-          `//localhost:8000/api/ls?path=${encodeURIComponent(dirPath)}`
-        );
-      }
+      const res = await fetch(
+        `//localhost:8000/api/ls?path=${dirPath}${
+          recursive ? "&recursive=true" : ""
+        }`
+      );
 
       const json = await res.json();
 
@@ -358,9 +418,7 @@ export default {
       }
     },
     async cat(filePath) {
-      const res = await fetch(
-        `//localhost:8000/api/cat?path=${encodeURIComponent(filePath)}`
-      );
+      const res = await fetch(`//localhost:8000/api/cat?path=${filePath}`);
 
       const contentType = res.headers.get("Content-Type");
 
