@@ -1,3 +1,4 @@
+const e = require('express');
 const express = require('express');
 const router = express.Router();
 
@@ -31,13 +32,15 @@ const listFileRecursive = (dir) =>
 router.get('/', function (req, res, next) {
   const { path: filePath, recursive } = req.query || '.';
 
-  if (recursive) {
+  if (recursive === "true") {
     const fileArr = listFileRecursive(filePath).map(filePath => {
       try {
         const stat = fs.statSync(filePath);
 
         return Object.assign({}, stat, {
           path: filePath + (stat.isDirectory() ? "/" : ""),
+          dir: path.posix.dirname(filePath),
+          parent: path.basename(path.join(filePath, "../")),
           name: encodeURIComponent(path.posix.basename(filePath) + (stat.isDirectory() ? "/" : "")),
         });
       } catch (err) {
