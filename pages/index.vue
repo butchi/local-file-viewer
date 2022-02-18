@@ -405,22 +405,20 @@ export default {
         return {};
       }
 
-      const res = await fetch(
-        `//localhost:8000/api/ffprobe?path=${encodeURIComponent(filePath)}`
-      );
+      const res = await fetch(`//localhost:8000/api/ffprobe?path=${filePath}`);
 
       return res;
     },
     async thumbnail(filePath) {
       const res = await fetch(
-        `//localhost:8000/api/thumbnail?path=${encodeURIComponent(filePath)}`
+        `//localhost:8000/api/thumbnail?path=${filePath}`
       );
 
       return res;
     },
     async videoThumb(filePath) {
       const res = await fetch(
-        `//localhost:8000/api/videothumb?path=${encodeURIComponent(filePath)}`
+        `//localhost:8000/api/videothumb?path=${filePath}`
       );
 
       return res;
