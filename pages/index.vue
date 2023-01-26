@@ -163,7 +163,7 @@ import "vue-md-player/dist/vue-md-player.css";
 import Logo from "~/components/Logo.vue";
 import VuetifyLogo from "~/components/VuetifyLogo.vue";
 
-const rootPath = "D://me/data/music/";
+const rootPath = "D://me/data/_music/";
 //- const rootPath = "C://Users/iwabuchi-yuki-butchi/";
 //- const rootPath = "/Users/iwabuchi-yuki-butchi/";
 
@@ -401,8 +401,7 @@ export default {
     },
     async ls(dirPath, { recursive = false }) {
       const res = await fetch(
-        `//localhost:8000/api/ls?path=${dirPath}${
-          recursive ? "&recursive=true" : ""
+        `http://localhost:8000/api/ls?path=${dirPath}${recursive ? "&recursive=true" : ""
         }`
       );
 
