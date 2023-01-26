@@ -107,19 +107,28 @@ v-layout
     v-card-text(v-if="dirMode == 'grid'")
       v-row
         v-col(v-for="(file, i) in curFileArr", :key="i", cols="2")
-          v-card(
-            min-height="160",
-            min-width="160",
-            @click.stop="fileClickHandler(file)"
-          )
-            v-img(v-if="file.thumbnail", :src="file.thumbnail")
-            v-img(v-if="file.videoThumb", :src="file.videoThumb")
-            v-img(v-if="file.artworkUrl", :src="file.artworkUrl")
-            v-card-title.text-caption
-              | {{ decodeURIComponent(file.name) }}
-              v-card-text(v-if="isDirectory(file.path)")
-                v-icon(x-large)
-                  | mdi-folder
+          v-hover
+            template(v-slot:default="{ hover }")
+              v-card(
+                min-height="160",
+                min-width="160",
+                @click.stop="fileClickHandler(file)"
+              )
+                v-img(v-if="file.thumbnail", :src="file.thumbnail", :aspect-ratio="8/5")
+                v-img(v-else-if="file.videoThumb", :src="file.videoThumb", :aspect-ratio="8/5")
+                v-img(v-else-if="file.artworkUrl", :src="file.artworkUrl", :aspect-ratio="8/5")
+                v-card-title.text-caption.text-truncate
+                  | {{ decodeURIComponent(file.name) }}
+                  v-card-text(v-if="isDirectory(file.path)")
+                    v-icon(x-large)
+                      | mdi-folder
+                v-fade-transition
+                  v-overlay.px-5(
+                    v-if="hover",
+                    absolute,
+                    color="#036358"
+                  )
+                    v-sheet(color="transparent") {{ decodeURIComponent(file.name) }}
 
     v-data-table(
       v-else,
@@ -163,8 +172,8 @@ import "vue-md-player/dist/vue-md-player.css";
 import Logo from "~/components/Logo.vue";
 import VuetifyLogo from "~/components/VuetifyLogo.vue";
 
-const rootPath = "D://me/data/_music/";
-//- const rootPath = "C://Users/iwabuchi-yuki-butchi/";
+// const rootPath = "D://me/data/";
+const rootPath = "C://Users/iwabuchi-yuki-butchi/local-file/";
 //- const rootPath = "/Users/iwabuchi-yuki-butchi/";
 
 export default {
@@ -251,7 +260,7 @@ export default {
 
       this.title = this.curDirPath;
 
-      const recursive = this.openMode === "file" || this.openMode === "folder";
+      const recursive = (this.openMode === "file") || (this.openMode === "folder");
 
       let curFileArr = await this.ls(dirPath, {
         recursive,
@@ -308,11 +317,13 @@ export default {
 
               this.videoThumb(file.path).then((res) => {
                 res.blob().then((blob) => {
-                  this.$set(
-                    this.curFileArr[idx],
-                    "videoThumb",
-                    this.blobToMedia(blob)
-                  );
+                  if (blob.size > 0) {
+                    this.$set(
+                      this.curFileArr[idx],
+                      "videoThumb",
+                      this.blobToMedia(blob)
+                    );
+                  }
                 });
               });
             }
@@ -344,8 +355,10 @@ export default {
               .replaceAll(/\- Single/g, "");
 
             this.artwork({ query }).then((res) => {
-              res.json().then((artworkUrl) => {
-                this.$set(this.curFileArr[idx], "artworkUrl", artworkUrl);
+              res.json().then(artworkUrl => {
+                if (artworkUrl) {
+                  this.$set(this.curFileArr[idx], "artworkUrl", artworkUrl);
+                }
               });
             });
           }
@@ -377,7 +390,7 @@ export default {
 
       // TODO: maybeのときは黄色ボタンを押したら再生とか
       if (canPlayType === "maybe" || canPlayType === "") {
-        const res = await fetch(`//localhost:8000/api/ffmpeg?path=${filePath}`);
+        const res = await fetch(`http://localhost:8000/api/ffmpeg?path=${filePath}`);
 
         const content = await res.blob();
 
@@ -418,7 +431,7 @@ export default {
       }
     },
     async cat(filePath) {
-      const res = await fetch(`//localhost:8000/api/cat?path=${filePath}`);
+      const res = await fetch(`http://localhost:8000/api/cat?path=${filePath}`);
 
       const contentType = res.headers.get("Content-Type");
 
@@ -463,26 +476,26 @@ export default {
         return {};
       }
 
-      const res = await fetch(`//localhost:8000/api/ffprobe?path=${filePath}`);
+      const res = await fetch(`http://localhost:8000/api/ffprobe?path=${filePath}`);
 
       return res;
     },
     async thumbnail(filePath) {
       const res = await fetch(
-        `//localhost:8000/api/thumbnail?path=${filePath}`
+        `http://localhost:8000/api/thumbnail?path=${filePath}`
       );
 
       return res;
     },
     async videoThumb(filePath) {
       const res = await fetch(
-        `//localhost:8000/api/videothumb?path=${filePath}`
+        `http://localhost:8000/api/videothumb?path=${filePath}`
       );
 
       return res;
     },
     async artwork({ query }) {
-      const res = await fetch(`//localhost:8000/api/artwork?q=${query}`);
+      const res = await fetch(`http://localhost:8000/api/artwork?q=${query}`);
 
       return res;
     },
