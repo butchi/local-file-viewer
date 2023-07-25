@@ -5,6 +5,7 @@ var request = require('request'); // "Request" library
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var Octokit = require('octokit').Octokit;
 require('dotenv').config();
 
 var clientId = process.env.CLIENT_ID; // Your client id
@@ -39,6 +40,26 @@ var thumbnailRouter = require('./routes/api/thumbnail');
 var videothumbRouter = require('./routes/api/videothumb');
 
 var app = express();
+
+
+
+// const getRepoContent = async _ => {
+//   const octokit = new Octokit({
+//     auth: process.env.GITHUB_TOKEN,
+//   });
+
+//   const res = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}{?ref}', {
+//     owner: 'butchi',
+//     repo: 'kotodama-visualizer',
+//     path: 'docs'
+//   });
+
+//   console.log(res);
+// }
+
+// getRepoContent()
+
+
 
 const allowCrossDomain = function (req, res, next) {
   res.header('Access-Control-Allow-Origin', '*');
